@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Tracking</title>
+    <!-- Use Tailwind CSS for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .paid-bubble {
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .paid-bubble:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        .paid-bubble.paid {
+            background-color: #4ade80;
+            color: #ffffff;
+        }
+
+        .paid-bubble.paid:hover {
+            transform: scale(1);
+            cursor: default;
+        }
+
+        .date-display {
+            font-size: 0.75rem;
+            color: #4b5563;
+            min-height: 2rem; /* Reserve space to prevent layout shift */
+        }
+    </style>
+</head>
+<body class="py-4 px-8 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-5xl mx-auto bg-white/20 py-4 px-6 sm:py-6 sm:px-8 rounded-xl shadow-lg border border-gray-200">
+        <div class="grid grid-cols-3 items-center mb-6">
+            <div></div> <!-- Empty column to center the title -->
+            <h1 class="text-xl font-bold text-gray-800 text-center">Payment Tracking</h1>
+            <p class="text-sm text-gray-400 text-right">Auto Resets on 1st of Mo.</p>
+        </div>
+
+        <!-- Main payment tracker grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center mt-6">
+
+            <!-- Column 1: Sumter City -->
+            <div class="flex flex-col items-center">
+                <h3 class="text-base font-semibold text-gray-700 mb-4">Sumter City</h3>
+                <div id="sumter-bubble" class="paid-bubble" data-company="sumter">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white transition-opacity duration-200 opacity-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <p id="sumter-date" class="date-display mt-4"></p>
+            </div>
+
+            <!-- Column 2: Duke Energy -->
+            <div class="flex flex-col items-center">
+                <h3 class="text-base font-semibold text-gray-700 mb-4">Duke Energy</h3>
+                <div id="duke-bubble" class="paid-bubble" data-company="duke">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white transition-opacity duration-200 opacity-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <p id="duke-date" class="date-display mt-4"></p>
+            </div>
+
+            <!-- Column 3: Spectrum -->
+            <div class="flex flex-col items-center">
+                <h3 class="text-base font-semibold text-gray-700 mb-4">Spectrum</h3>
+                <div id="spectrum-bubble" class="paid-bubble" data-company="spectrum">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white transition-opacity duration-200 opacity-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <p id="spectrum-date" class="date-display mt-4"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bubbles = document.querySelectorAll('.paid-bubble');
+            const companies = ['sumter', 'duke', 'spectrum'];
+
+            // Function to save the current state to localStorage
+            const saveState = () => {
+                const state = {};
+                companies.forEach(company => {
+                    state[company] = {
+                        isPaid: document.getElementById(`${company}-bubble`).classList.contains('paid'),
+                        date: document.getElementById(`${company}-date`).textContent
+                    };
+                });
+                localStorage.setItem('utilityPayments', JSON.stringify(state));
+            };
+
+            // Function to load the saved state from localStorage and update the UI
+            const loadState = () => {
+                const savedState = localStorage.getItem('utilityPayments');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    companies.forEach(company => {
+                        const bubble = document.getElementById(`${company}-bubble`);
+                        const dateElement = document.getElementById(`${company}-date`);
+
+                        if (state[company] && state[company].isPaid) {
+                            bubble.classList.add('paid');
+                            bubble.querySelector('svg').classList.remove('opacity-0');
+                            dateElement.textContent = state[company].date;
+                        } else {
+                            // Ensure the bubble is in the default state
+                            bubble.classList.remove('paid');
+                            bubble.querySelector('svg').classList.add('opacity-0');
+                            dateElement.textContent = '';
+                        }
+                    });
+                }
+            };
+
+            // Function to check if a reset is needed (on the 1st of each month)
+            const checkAndReset = () => {
+                const lastReset = localStorage.getItem('lastReset');
+                const today = new Date();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+                const currentDay = today.getDate();
+
+                if (currentDay === 1) {
+                    if (!lastReset || new Date(lastReset).getMonth() !== currentMonth || new Date(lastReset).getFullYear() !== currentYear) {
+                        // Reset is needed because it's the 1st of a new month
+                        localStorage.removeItem('utilityPayments');
+                        localStorage.setItem('lastReset', today.toISOString()); // Store the new reset date
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            // Initialize the app
+            if (checkAndReset()) {
+                console.log('Monthly reset performed.');
+            }
+            loadState();
+
+            // Add click event listeners to the bubbles
+            bubbles.forEach(bubble => {
+                bubble.addEventListener('click', (e) => {
+                    // Check if the bubble has already been clicked to prevent re-clicks
+                    if (e.currentTarget.classList.contains('paid')) {
+                        return;
+                    }
+
+                    // Add a class to change the bubble's color and show the checkmark
+                    e.currentTarget.classList.add('paid');
+                    e.currentTarget.querySelector('svg').classList.remove('opacity-0');
+
+                    // Get the corresponding date display element using its data attribute
+                    const companyName = e.currentTarget.dataset.company;
+                    const dateElement = document.getElementById(`${companyName}-date`);
+
+                    // Get today's date
+                    const today = new Date();
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    const formattedDate = today.toLocaleDateString('en-US', options);
+                    
+                    // Display the date
+                    dateElement.textContent = `Paid on ${formattedDate}`;
+
+                    // Save the new state
+                    saveState();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
